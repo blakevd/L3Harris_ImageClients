@@ -2,7 +2,7 @@ import sys
 import grpc
 import argparse
 import os
-from PIL import Image
+from PIL import Image # This is Pillow from Ubuntu Dockerfile
 
 # Change directory to Routes so we can import the protobufs
 current_directory = sys.path[0]
@@ -41,7 +41,7 @@ def run(image_file_path, server_address='localhost', server_port=50051):
         # Read and send data from the CSV file
         for image_data in read_images_from_folder(image_file_path): 
             serial_data = image_data.SerializeToString()
-            type_url = f"ImageData" # this is needed if we define a package in the proto then it  would be the packagename.EmailData or packagename.email_pb2.EmailData
+            type_url = f"ImageData"
             anypb_msg = any_pb2.Any(value=serial_data, type_url=type_url)
             
             request = generic_pb2.protobuf_insert_request(
