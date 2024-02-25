@@ -7,6 +7,10 @@ import time
 import board
 import busio
 import adafruit_mlx90640
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 
 # Camera Setup
 i2c = busio.I2C(board.SCL, board.SDA, frequency=400000)
@@ -68,7 +72,6 @@ def run(image_file_path, server_address=ip_address, server_port=50051):
 
 
         frame = [0] * 768
-        counter= 0
 
         while True:
             try:
@@ -76,14 +79,14 @@ def run(image_file_path, server_address=ip_address, server_port=50051):
             except ValueError:
                 # these happen, no biggie - retry
                 continue
-            print(type(frame))
-            print(frame)
+            logging.debug(type(frame))
+            logging.debug(frame)
             #TODO: Replace loop below with a protobuf send like comments below
             for h in range(24):
                 for w in range(32):
                     t = frame[h*32 + w]
                     # print("%0.1f, " % t, end="") #Prints the list of pixels
-                print()
+                # print()
 
 
 if __name__ == '__main__':
