@@ -14,4 +14,4 @@ See Server_README.md in db-manager
 
 - [ ] Install packages and dependencies in a virtual enviorment like the directions at [adafruit-github](https://github.com/adafruit/Adafruit_CircuitPython_MLX90640)
 
-- [ ] IMPORTANT- The thermal camera has circuitpython dependencies that can be sucessfuly applied by following the directions at [adafruit-circuitpython-guide]https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi
+- [ ] IMPORTANT- The thermal camera has circuitpython dependencies that can be sucessfuly applied by following the directions at [adafruit-circuitpython-guide](https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi)
