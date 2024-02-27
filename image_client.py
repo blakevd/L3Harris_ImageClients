@@ -3,11 +3,13 @@ import grpc
 import argparse
 import os
 from PIL import Image # This is Pillow from Ubuntu Dockerfile
-import time
 import board
 import busio
 import adafruit_mlx90640
 import logging
+import io
+import time
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -56,21 +58,14 @@ def run(image_file_path, server_address='localhost', server_port=50051):
         # Create a stub (client)
         stub = generic_pb2_grpc.DBGenericStub(channel)
 
-        # TODO: Remove the temporary for loop that takes images. Replace with mlk images
-        # Read and send data from the CSV file
-        for image_data in read_images_from_folder(image_file_path): 
-            serial_data = image_data.SerializeToString()
-            type_url = f"ImageData"
-            anypb_msg = any_pb2.Any(value=serial_data, type_url=type_url)
-            
-            request = generic_pb2.protobuf_insert_request(
-                keyspace="imageKeyspace",
-                protobufs=[anypb_msg] 
-            )
-            response = stub.Insert(request)
-
-
         frame = [0] * 768
+        # Temperature range in Celsius (adjust according to your application)
+        min_temperature = 34  # Minimum temperature in Celsius (setting for human detection)
+        max_temperature = 39  # Maximum temperature in Celsius (setting for human detection)
+
+        # Grayscale intensity range
+        min_intensity = 0  # Corresponding to min_temperature
+        max_intensity = 255  # Corresponding to max_temperature
 
         while True:
             try:
@@ -78,14 +73,45 @@ def run(image_file_path, server_address='localhost', server_port=50051):
             except ValueError:
                 # these happen, no biggie - retry
                 continue
-            logging.debug(type(frame))
-            logging.debug(frame)
-            #TODO: Replace loop below with a protobuf send like comments below
+
+            # Convert frame data into a PIL Image
+            img = Image.new('L', (32, 24))  # Create a new grayscale image
+            pixels = img.load()  # Create pixel map
             for h in range(24):
                 for w in range(32):
-                    t = frame[h*32 + w]
-                    print("%0.1f, " % t, end="") #Prints the list of pixels
-                print()
+                    # Scale the temperature value to the range [0, 1]
+                    temperature = (frame[h*32 + w] - min_temperature) / (max_temperature - min_temperature)
+                    # Map the temperature value to the grayscale intensity range [0, 255]
+                    intensity = int(temperature * (max_intensity - min_intensity) + min_intensity)
+                    # Ensure the intensity value is within the valid range [0, 255]
+                    intensity = max(0, min(intensity, 255))
+                    pixels[w, h] = intensity
+
+            # Generate file name
+            file_name = os.path.join("data", f"frame_{time.time()}.png")
+
+            # Save the image as a PNG file
+            img.save(file_name, format='PNG')
+
+            for image_data in read_images_from_folder(image_file_path): 
+                serial_data = image_data.SerializeToString()
+                logging.info(f"Image Type: {type(serial_data)} \nData: {serial_data}")
+                type_url = f"ImageData"
+                anypb_msg = any_pb2.Any(value=serial_data, type_url=type_url)
+                
+                request = generic_pb2.protobuf_insert_request(
+                    keyspace="imageKeyspace",
+                    protobufs=[anypb_msg] 
+                )
+                logging.info(f"\nWorking Type: {type(request)} \nRequest: {request}")
+                response = stub.Insert(request)
+
+            # Clear out the folder after processing
+            for filename in os.listdir(image_file_path):
+                file_path = os.path.join(image_file_path, filename)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+
 
 
 if __name__ == '__main__':
