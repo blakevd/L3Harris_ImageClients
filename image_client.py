@@ -50,7 +50,7 @@ def run(image_file_path, server_address='localhost', server_port=50051):
         # Create a stub (client)
         stub = generic_pb2_grpc.DBGenericStub(channel)
 
-        while True:
+        while time.sleep(1):
             frame = [0] * 768
             try:
                 mlx.getFrame(frame)
