@@ -14,7 +14,8 @@ import struct
 logging.basicConfig(level=logging.INFO)
 
 # Camera Setup
-i2c = busio.I2C(board.SCL, board.SDA, frequency=400000)
+# set frequency in boot/config.txt not in script
+i2c = busio.I2C(board.SCL, board.SDA)
 mlx = adafruit_mlx90640.MLX90640(i2c)
 print("MLX addr detected on I2C", [hex(i) for i in mlx.serial_number])
 
@@ -50,7 +51,7 @@ def run(image_file_path, server_address='localhost', server_port=50051):
         # Create a stub (client)
         stub = generic_pb2_grpc.DBGenericStub(channel)
 
-        while time.sleep(1):
+        while True:
             frame = [0] * 768
             try:
                 mlx.getFrame(frame)
@@ -63,8 +64,9 @@ def run(image_file_path, server_address='localhost', server_port=50051):
             image_message.identifier = counter
             counter += 1
 
-            # add list of floats into long string and round the floats to save space
-            image_message.data = stringify_float_list(round(frame, decimals=1), delimiter=',')
+            # add list of floats into long string and round the floats to save space            
+            frame_rounded = [round(n, 1) for n in frame]
+            image_message.data = stringify_float_list(frame_rounded, delimiter=',')
 
             # Serialize the ImageData message to bytes
             serialized_image = image_message.SerializeToString()
@@ -83,6 +85,7 @@ def run(image_file_path, server_address='localhost', server_port=50051):
 
             # Handle the response as needed
             print("Response:", response)
+            time.sleep(1)
 
 def stringify_float_list(float_list, delimiter=','):
     return delimiter.join(map(str, float_list))
