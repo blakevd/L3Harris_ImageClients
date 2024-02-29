@@ -1,7 +1,9 @@
 syntax = "proto3";
+import "google/protobuf/any.proto";
 
 option go_package = "../common";
 
 message ImageData {
-    bytes data = 1;
+    int32 identifier = 1;
+    bytes data = 2;
 }
