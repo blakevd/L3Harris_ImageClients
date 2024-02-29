@@ -11,7 +11,6 @@ import io
 import time
 import struct
 
-
 logging.basicConfig(level=logging.INFO)
 
 # Camera Setup
@@ -64,8 +63,8 @@ def run(image_file_path, server_address='localhost', server_port=50051):
             image_message.identifier = counter
             counter += 1
 
-
-            image_message.data = stringify_float_list(frame, delimiter=',')
+            # add list of floats into long string and round the floats to save space
+            image_message.data = stringify_float_list(round(frame, decimals=1), delimiter=',')
 
             # Serialize the ImageData message to bytes
             serialized_image = image_message.SerializeToString()
