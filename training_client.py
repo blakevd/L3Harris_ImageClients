@@ -25,19 +25,29 @@ def run(server_address='localhost', server_port=50051):
 
             # request image data column
             # currently does not work because select query is bad
-            request = generic_pb2.protobuf_select_request(
-                keyspace="imagekeyspace",
-                table = "imagedata",
-                column = "data",
-                constraint = "data"
-            )
-            response = stub.Select(request)
-            print(f"Server Response: {response.response}")
+            for i in range(20):
+                request = generic_pb2.protobuf_select_request(
+                    keyspace='imagekeyspace',
+                    table = 'imagedata',
+                    column = 'identifier',
+                    constraint = str(i)
+                )
+                response = stub.Select(request)
+                
+                # go through protobufs in the response
+                for serial_msg in response.protobufs:
+                    image_data = image_pb2.ImageData()
+                    image_data.ParseFromString(serial_msg)
+                    # print(f'Data: {image_data.data}, {image_data.identifier}')
+                    frame = [float(j) for j in image_data.data.split(',')]
+                    print(frame)
+                
+                #print(f'Server Response: {response}')
     except grpc.RpcError as e:
-        print(f"Error communicating with gRPC server: {e}")
-        print(f"Code: {e.code()}")
-        print(f"Details: {e.details()}")
-        print(f"Trailers: {e.trailing_metadata()}")
+        print(f'Error communicating with gRPC server: {e}')
+        print(f'Code: {e.code()}')
+        print(f'Details: {e.details()}')
+        print(f'Trailers: {e.trailing_metadata()}')
 
 if __name__ == '__main__':
     # Use argparse to handle command-line arguments
