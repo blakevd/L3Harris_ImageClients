@@ -5,5 +5,5 @@ option go_package = "../common";
 
 message ImageData {
     int32 identifier = 1;
-    bytes data = 2;
+    string data = 2;
 }

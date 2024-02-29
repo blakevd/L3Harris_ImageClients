@@ -9,6 +9,7 @@ import adafruit_mlx90640
 import logging
 import io
 import time
+import struct
 
 
 logging.basicConfig(level=logging.INFO)
@@ -58,42 +59,13 @@ def run(image_file_path, server_address='localhost', server_port=50051):
                 # these happen, no biggie - retry
                 continue
 
-            # Convert frame data into a PIL Image
-            img = Image.new('L', (32, 24))  # Create a new grayscale image
-            pixels = img.load()  # Create pixel map
-            for h in range(24):
-                for w in range(32):
-                    # Temperature range in Celsius (adjust according to your application)
-                    min_temperature = 20  # Minimum temperature in Celsius (setting for human detection)
-                    max_temperature = 50  # Maximum temperature in Celsius (setting for human detection)
-                    # Grayscale intensity range
-                    min_intensity = 0  # Corresponding to min_temperature
-                    max_intensity = 255  # Corresponding to max_temperature
-                    # Scale the temperature value to the range [0, 1]
-                    temperature = (frame[h*32 + w] - min_temperature) / (max_temperature - min_temperature)
-                    # Map the temperature value to the grayscale intensity range [0, 255]
-                    intensity = int(temperature * (max_intensity - min_intensity) + min_intensity)
-                    # Ensure the intensity value is within the valid range [0, 255]
-                    intensity = max(0, min(intensity, 255))
-                    pixels[w, h] = intensity
-
-            # Get the current timestamp
-            timestamp_ms = int(time.time() * 1000)
-
-            # Save the image as a PNG file
-            file_name = os.path.join("data", f"frame_{timestamp_ms}.png")
-            img.save(file_name, format='PNG')
-
-            # Read the saved image data
-            with open(file_name, 'rb') as image_file:
-                image_data = image_file.read()
-
             # Create an instance of the ImageData message
             image_message = image_pb2.ImageData()
             image_message.identifier = counter
             counter += 1
 
-            image_message.data = image_data
+
+            image_message.data = stringify_float_list(frame, delimiter=',')
 
             # Serialize the ImageData message to bytes
             serialized_image = image_message.SerializeToString()
@@ -113,8 +85,8 @@ def run(image_file_path, server_address='localhost', server_port=50051):
             # Handle the response as needed
             print("Response:", response)
 
-            # Clear out the folder after processing
-            os.remove(file_name)
+def stringify_float_list(float_list, delimiter=','):
+    return delimiter.join(map(str, float_list))
 
 # Deletes the entire table in the database
 def dropTable(server_address='localhost', server_port=50051):
