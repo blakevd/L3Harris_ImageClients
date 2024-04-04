@@ -48,7 +48,7 @@ def run(server_address='localhost', server_port=50051):
                     keyspace='imagekeyspace',
                     table = 'imagedata',
                     column = 'identifier',
-                    constraint = str(counter)
+                    constraint = 'MAX'
                 )
                 response = stub.Select(request)
                 if(response != ''):
@@ -62,8 +62,6 @@ def run(server_address='localhost', server_port=50051):
                         update_img(frame)
                         root.update_idletasks()
                         root.update()   
-                        
-                        counter += 1    
                         
                         # close if the window disappears
                         if not root.winfo_exists():
