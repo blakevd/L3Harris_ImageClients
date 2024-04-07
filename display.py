@@ -27,10 +27,12 @@ else:
 
 plt.title("L3Harris Clinic Team - Thermal Image Client View", color='white', fontweight='bold', fontsize=20)  # Our Team Name
 
-frame = np.zeros(mlx_shape[0] * mlx_shape[1])  # 768 pts
-
 def plot_update():
-    mlx.getFrame(frame)  # read mlx90640
+    frame = np.zeros(mlx_shape[0]*mlx_shape[1])
+    try:
+        mlx.getFrame(frame)  # read mlx90640
+    except ValueError:
+        return
 
     if fahrenheit:
         frame_fahrenheit = celsius_to_fahrenheit(frame)    
@@ -56,6 +58,7 @@ def celsius_to_fahrenheit(value):
 while True:
     try:
         plot_update()  # update plot
+        time.sleep(0.1)
         # print(f"Time: {time.time()}")
     except ValueError:
         continue

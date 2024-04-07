@@ -4,13 +4,23 @@ import "google/protobuf/any.proto";
 
 option go_package = "../common";
 
-// Insert data
+// Returned Status Values
+enum ServerStatus {
+    CREATED = 0;
+    SELECTED = 1;
+    UPDATED = 2;
+    DELETED = 3;
+    FAILED = 4;
+    DUPLICATE_ENTRY = 5;
+}
+
+// Insert Request
 message protobuf_insert_request {
     string keyspace = 1;
     repeated google.protobuf.Any protobufs = 2;
 }
 
-// Selelct data
+// Selelct Request
 message protobuf_select_request {
     string keyspace = 1;
     string table = 2;
@@ -18,7 +28,7 @@ message protobuf_select_request {
     string constraint = 4;
 }
 
-// Update data
+// Update Request
 message protobuf_update_request {
     string keyspace = 1;
     string table = 2;
@@ -27,7 +37,7 @@ message protobuf_update_request {
     string new_value = 5;
 }
 
-// Delete data
+// Delete Request
 message protobuf_delete_request {
     string keyspace = 1;
     string table = 2;
@@ -35,25 +45,29 @@ message protobuf_delete_request {
     string constraint = 4;
 }
 
-// Drop Table
+// Drop Table Request
 message protobuf_droptable_request {
     string keyspace = 1;
     string table = 2;
 }
 
-message protobuf_error_response {
-    repeated string errs = 1;
+// Server Response
+message protobuf_server_response {
+    ServerStatus status = 1;
+    repeated string errs = 2;
 }
 
+// Select Response (containing selected fields)
 message protobuf_select_response {
-    string response = 1;
-    repeated bytes protobufs = 2;
+    ServerStatus status = 1;
+    string errs = 2;
+    repeated bytes protobufs = 3;
 }
 
 service DBGeneric {
-    rpc Insert(protobuf_insert_request) returns (protobuf_error_response);
+    rpc Insert(protobuf_insert_request) returns (protobuf_server_response);
     rpc Select(protobuf_select_request) returns (protobuf_select_response);
-    rpc Update(protobuf_update_request) returns (protobuf_error_response);
-    rpc Delete(protobuf_delete_request) returns (protobuf_error_response);
-    rpc DropTable(protobuf_droptable_request) returns (protobuf_error_response);
+    rpc Update(protobuf_update_request) returns (protobuf_server_response);
+    rpc Delete(protobuf_delete_request) returns (protobuf_server_response);
+    rpc DropTable(protobuf_droptable_request) returns (protobuf_server_response);
 }
